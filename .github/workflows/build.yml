@@ -1,4 +1,4 @@
-name: Build 32-bit static softflowd
+name: Build static 32-bit softflowd
 
 on:
   workflow_dispatch:
@@ -7,30 +7,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image: i386/debian:bullseye
-
     steps:
-      - name: Install build dependencies
+      - name: Install dependencies for 32-bit cross-build
         run: |
-          apt-get update
-          DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            build-essential gcc-multilib g++-multilib \
-            libpcap-dev autoconf automake libtool git
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib \
+              libpcap-dev:i386 autoconf automake libtool git make
 
       - name: Clone and build softflowd
         run: |
           git clone https://github.com/irino/softflowd.git
           cd softflowd
           autoreconf -i
-          ./configure CFLAGS="-static -m32"
+          ./configure CFLAGS="-m32 -static"
           make
           strip softflowd
-          mkdir -p /artifacts
-          cp softflowd /artifacts/
+          mkdir -p artifacts
+          cp softflowd artifacts/softflowd-32bit-static
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
           name: softflowd-32bit-static
-          path: /artifacts/softflowd
+          path: artifacts/softflowd-32bit-static
