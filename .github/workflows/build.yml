@@ -8,12 +8,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install dependencies for 32-bit cross-build
+      - name: Add i386 architecture and update
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
+
+      - name: Install dependencies
+        run: |
           sudo apt-get install -y gcc-multilib g++-multilib \
-              libpcap-dev:i386 autoconf automake libtool git make
+            libpcap-dev:i386 autoconf automake libtool git make
 
       - name: Clone and build softflowd
         run: |
