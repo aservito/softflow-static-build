@@ -6,22 +6,31 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: i386/debian:bullseye
+
+    container:
+      image: i386/debian:bullseye
 
     steps:
-      - run: |
-          apt-get update && \
-          apt-get install -y build-essential libpcap-dev autoconf automake libtool git strip
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential gcc-multilib g++-multilib \
+            libpcap-dev autoconf automake libtool git
 
-      - run: |
+      - name: Clone and build softflowd
+        run: |
           git clone https://github.com/irino/softflowd.git
           cd softflowd
           autoreconf -i
-          ./configure CFLAGS="-static -Dlinux"
+          ./configure CFLAGS="-static -m32"
           make
           strip softflowd
+          mkdir -p /artifacts
+          cp softflowd /artifacts/
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
         with:
           name: softflowd-32bit-static
-          path: softflowd/softflowd
+          path: /artifacts/softflowd
